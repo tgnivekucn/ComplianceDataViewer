@@ -69,8 +69,8 @@
 
             let array = testActionWithBase64Input(timezone, input, isNeedToReverse);
             const xData1 = array.map(element => {
-                let date1 = new Date(element.date1);
-                let date2 = new Date(element.date2);
+                let date1 = new Date(element.startTimeString);
+                let date2 = new Date(element.endTimeString);
                 let base64String = element.item;
                 let hasError = false;
                 let date1String = "";
@@ -78,7 +78,7 @@
                     date1String = "startTime: Invalid Date????????";
                     hasError = true;
                 } else {
-                    date1String = "startTime:" + element.date1;
+                    date1String = "startTime:" + element.startTimeString;
                 }
 
                 let date2String = "";
@@ -86,7 +86,7 @@
                     date2String = "endTime: Invalid Date????????";
                     hasError = true;
                 } else {
-                    date2String = "endTime:" + element.date2;
+                    date2String = "endTime:" + element.endTimeString;
                 }
 
                 if (isWholeHour(date1) === true) {
