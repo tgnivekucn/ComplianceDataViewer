@@ -28,7 +28,6 @@
     <br>
     <p>
     <div align="center"> <button type="submit" onclick="trackChange()">Submit</button> </div>
-    <div align="center"> <button type="submit" onclick="trackChange2()">Reverse Order then Submit</button> </div>
     </p>
     <br><br><br>
     <div align="center">
@@ -54,9 +53,6 @@
             return date.getMinutes() === 0 && date.getSeconds() === 0;
         }
 
-        function trackChange2() {
-            calculateChart(true);
-        }
         function trackChange() {
             calculateChart(false);
         }
@@ -68,6 +64,16 @@
             document.getElementById('totalDataCount').innerHTML = totalCount;
 
             let array = testActionWithBase64Input(timezone, input, isNeedToReverse);
+
+            // Reverse entire array if the date is in descending order
+            if (array.length > 1) {
+                let date1 = new Date(array[0].startTimeString);
+                let date2 = new Date(array[1].startTimeString);
+                if (date2 < date1) {
+                    array.reverse();
+                }
+            }
+
             const xData1 = array.map(element => {
                 let date1 = new Date(element.startTimeString);
                 let date2 = new Date(element.endTimeString);
