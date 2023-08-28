@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart.js Time Series Line Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+    <script src="./parse.js"></script>
+    <style>
+        #chart-wrapper {
+            display: inline-grid;
+            width: 60%;
+            margin-left: 20%;
+            /* relative to the nearest block container's width */
+            margin-right: 20%;
+        }
+        #container {
+            position: relative;
+            width: 60%;
+        }
+    </style>
+</head>
+
+<body>
+    <br><br><br>
+    <p><label for="Binary Data in Base64 String"><b>Please enter base64String array:</b> </label></p>
+    <br>
+    <p> <div align="center"> <input type="text" id="myInput" style="width:1000px"> </div></p>
+    <br>
+    <p>
+    <div align="center"> <button type="submit" onclick="trackChange()">Submit</button> </div>
+    <div align="center"> <button type="submit" onclick="trackChange2()">Reverse Order then Submit</button> </div>
+    </p>
+    <br><br><br>
+    <div align="center">
+        <p>Total Data Count(p.s. 整點到下一個整點算一筆) is: <b><span id="totalDataCount"></span></b></p>
+    </div>
+
+    <div id="chart-wrapper">
+           <p><label for="CannotScrollChart"><b>不能左右移動檢視的圖表:</b> </label></p>
+        <canvas id="myChartOriginal"></canvas>
+        <div align="center"> <button type="Reset Zoom" onclick="trackChange()">Reset Zoom</button> </div>
+
+        <p><label for="SupportScrollChart"><b>可以左右移動檢視的圖表:</b> </label></p>
+        <div style="width: 100%; overflow-x: auto; overflow-y: hidden">
+            <div style="width: 3000px;height: 600px">
+                <canvas id="myChart" width="0" height: 500></canvas>
+            </div>
+        </div>
+        <div align="center"> <button type="Reset Zoom" onclick="trackChange()">Reset Zoom</button> </div>
+    </div>
+    <script>
+        function isWholeHour(date) {
+            // const date = new Date(timestamp);
+            return date.getMinutes() === 0 && date.getSeconds() === 0;
+        }
+
+        function trackChange2() {
+            calculateChart(true);
+        }
+        function trackChange() {
+            calculateChart(false);
+        }
+        function calculateChart(isNeedToReverse) {
+            var input = document.getElementById("myInput").value;
+            console.log("input is: " + input);
+            let timezone = 'Asia/Taipei'; //'Etc/GMT'、'Asia/Taipei'、'America/New_York'、'America/Los_Angeles'
+            let totalCount = getTotalDataCount(input);
+            document.getElementById('totalDataCount').innerHTML = totalCount;
+
+            let array = testActionWithBase64Input(timezone, input, isNeedToReverse);
+            const xData1 = array.map(element => {
+                let date1 = new Date(element.date1);
+                let date2 = new Date(element.date2);
+                let base64String = element.item;
+                let hasError = false;
+                let date1String = "";
+                if (isNaN(date1)) {
+                    date1String = "startTime: Invalid Date????????";
+                    hasError = true;
+                } else {
+                    date1String = "startTime:" + element.date1;
+                }
+
+                let date2String = "";
+                if (isNaN(date2)) {
+                    date2String = "endTime: Invalid Date????????";
+                    hasError = true;
+                } else {
+                    date2String = "endTime:" + element.date2;
+                }
+
+                if (isWholeHour(date1) === true) {
+                    if (hasError) {
+                        return date1String + " , " + date2String + ": 原始base64String" + base64String;
+                    } else {
+                        return date1String + " , " + date2String + ": ";
+                    }
+                } else {
+                    if (hasError) {
+                        return "(**非整點**)" + date1String + " , " + date2String + ": 原始base64String" + base64String;
+                    } else {
+                        return "(**非整點**)" + date1String + " , " + date2String + ": ";
+                    }
+                }
+            });
+            const yData1 = array.map(element => element.intValue);
+            const yData2 = array.map(element => element.intValue2);
+
+            console.log(xData1);
+            console.log(yData1);
+            console.log(yData2);
+
+            // JS - Destroy exiting Chart Instance to reuse <canvas> element
+            let chartStatus = Chart.getChart("myChart"); // <canvas> id
+            let chartStatusOriginal = Chart.getChart("myChartOriginal"); // <canvas> id
+
+            if (chartStatus != undefined) {
+                chartStatus.destroy();
+            }
+            if (chartStatusOriginal != undefined) {
+                chartStatusOriginal.destroy();
+            }
+
+            let ctx2 = document.getElementById('myChartOriginal').getContext('2d');
+            let ctx = document.getElementById('myChart').getContext('2d');
+
+            var myChart1 = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: xData1,
+                    datasets: [{
+                        label: 'Treatment',
+                        data: yData1
+                    },
+                    {
+                        label: 'Leakage',
+                        data: yData2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                min: 0, // minimum value
+                                max: 10000 // maximum value
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'xy',
+                            }
+                        }
+                    }
+                }
+            });
+
+            var myChart2 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xData1,
+                    datasets: [{
+                        label: 'Treatment',
+                        data: yData1
+                    },
+                    {
+                        label: 'Leakage',
+                        data: yData2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                min: 0, // minimum value
+                                max: 10000 // maximum value
+                            }
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'xy',
+                            }
+                        }
+                    }
+                }
+
+            });
+        }
+    </script>
+</body>
+
+</html>
