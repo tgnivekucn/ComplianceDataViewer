@@ -183,25 +183,23 @@ function testActionWithBase64Input(timezone, base64StringArrInput, isNeedToRever
         let resultBytes = base64ToArrayBuffer(item);
         let record = makeType1ComplianceRecord(resultBytes);
         if (record != null) {
-            let initialDate1 = record["start"];
-            let initialDate2 = record["end"];
-            let intValue = record["treatment"];
-            let intValue2 = record["leakage"];
+            let startTime = record["start"];
+            let endTime = record["end"];
+            let treatmentVal = record["treatment"];
+            let leakageVal = record["leakage"];
             // Convert the adjusted Date object to a timestamp (in seconds)
             let timestampOfDat1 = 0;
-            if (initialDate1 != null && initialDate1.getTime() != null) {
-                timestampOfDat1 = Math.floor(initialDate1.getTime() / 1000);
+            if (startTime != null && startTime.getTime() != null) {
+                timestampOfDat1 = Math.floor(startTime.getTime() / 1000);
             }
             let timestampOfDat2 = 0;
-            if (initialDate2 != null && initialDate2.getTime() != null) {
-                timestampOfDat2 = Math.floor(initialDate2.getTime() / 1000);
+            if (endTime != null && endTime.getTime() != null) {
+                timestampOfDat2 = Math.floor(endTime.getTime() / 1000);
             }
             console.log("timestampOfDat 1 & 2");
             console.log(timestampOfDat1);
             console.log(timestampOfDat2);
 
-            let date1 = "";
-            let date2 = "";
             let options = { timeZone: 'Etc/GMT' };
             if (timeZoneString != null) {
                 options = { timeZone: timeZoneString };
@@ -213,34 +211,34 @@ function testActionWithBase64Input(timezone, base64StringArrInput, isNeedToRever
             const date1Object = new Date(millisecondsOfDate1);
             const date2Object = new Date(millisecondsOfDate2);
 
-            date1 = date1Object?.toLocaleString('en-US', options);
-            date2 = date2Object?.toLocaleString('en-US', options);
+            let startTimeString = date1Object?.toLocaleString('en-US', options);
+            let endTimeString = date2Object?.toLocaleString('en-US', options);
 
             console.log("Start print info: ");
-            console.log(initialDate1);
-            console.log(initialDate2);
-            console.log(intValue);
-            console.log(intValue2);
+            console.log(startTime);
+            console.log(endTime);
+            console.log(treatmentVal);
+            console.log(leakageVal);
 
             console.log("End print info: ");
-            if (initialDate1 == null || initialDate1.getTime() == null) {
-                date1 = "";
+            if (startTime == null || startTime.getTime() == null) {
+                startTimeString = "";
             }
-            if (initialDate2 == null || initialDate2.getTime() == null) {
-                date2 = "";
+            if (endTime == null || endTime.getTime() == null) {
+                endTimeString = "";
             }
             // Create the object
-            const obj = { date1, date2, intValue, intValue2, item };
+            const obj = { startTimeString, endTimeString, treatmentVal, leakageVal, item };
 
             // Add the object to the array
             arr.push(obj);
         } else {
             // Create the object
-            let date1 = "Record NULL";
-            let date2 = "Record NULL";
-            let intValue = 0;
-            let intValue2 = 0;
-            const obj = { date1, date2, intValue, intValue2, item };
+            let startTimeString = "Record NULL";
+            let endTimeString = "Record NULL";
+            let treatmentVal = 0;
+            let leakageVal = 0;
+            const obj = { startTimeString, endTimeString, treatmentVal, leakageVal, item };
             arr.push(obj);
         }
     }
