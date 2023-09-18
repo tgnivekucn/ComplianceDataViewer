@@ -98,9 +98,9 @@
 
             // Example usage:
             // const base64StringArr = ["FwcFFgAXBwUXAADhAAAACA==","FwcFFQAXBwUWAADhEAAACA=="];
-            let base64StringArr = ErrorDetectParser.shared.getBase64StringArr(input);
-            const [hourCount, analyzeResult] = ErrorDetectParser.shared.parseBase64StringArr(base64StringArr);
-
+            // let base64StringArr = ErrorDetectParser.shared.getBase64StringArr(input);
+            // const [hourCount, analyzeResult] = ErrorDetectParser.shared.parseBase64StringArr(base64StringArr);
+            const [hourCount, analyzeResult] = getErrorDetectResult(input);
             console.log("Hour Count:", hourCount);
             console.log("Analyze Result:", analyzeResult.getResult());
             console.log("Analyze Result(dataCorrupted) count:", analyzeResult.getErrorCount('dataCorrupted'));

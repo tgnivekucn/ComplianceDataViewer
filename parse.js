@@ -428,3 +428,9 @@ class ErrorDetectParser {
         return base64StringArr;
     }
 }
+
+function getErrorDetectResult(input) {
+    let base64StringArr = ErrorDetectParser.shared.getBase64StringArr(input);
+    const [hourCount, analyzeResult] = ErrorDetectParser.shared.parseBase64StringArr(base64StringArr);
+    return [hourCount, analyzeResult];
+}
