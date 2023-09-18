@@ -63,6 +63,27 @@
             let totalCount = getTotalDataCount(input);
             document.getElementById('totalDataCount').innerHTML = totalCount;
 
+            console.log("(2)");
+
+            // Example usage:
+            // const base64StringArr = ["FwcFFgAXBwUXAADhAAAACA==","FwcFFQAXBwUWAADhEAAACA=="];
+            let base64StringArr = ErrorDetectParser.shared.getBase64StringArr(input);
+            const [hourCount, analyzeResult] = ErrorDetectParser.shared.parseBase64StringArr(base64StringArr);
+
+            console.log("Hour Count:", hourCount);
+            console.log("Analyze Result:", analyzeResult.getResult());
+            console.log("Analyze Result(dataCorrupted) count:", analyzeResult.getErrorCount('dataCorrupted'));
+            console.log("Analyze Result(duplicateRecord) count:", analyzeResult.getErrorCount('duplicateRecord'));
+            console.log("Analyze Result(startTimeNil) count:", analyzeResult.getErrorCount('startTimeNil'));
+            console.log("Analyze Result(endTimeNil) count:", analyzeResult.getErrorCount('endTimeNil'));
+            console.log("Analyze Result(bothTimesNil) count:", analyzeResult.getErrorCount('bothTimesNil'));
+            console.log("Analyze Result(missingData) count:", analyzeResult.getErrorCount('missingData'));
+            console.log("Analyze Result(startTimeChanged) count:", analyzeResult.getErrorCount('startTimeChanged'));
+            console.log("Analyze Result(allBytesFF) count:", analyzeResult.getErrorCount('allBytesFF'));
+
+
+            console.log("(3)");
+
             let array = testActionWithBase64Input(timezone, input, isNeedToReverse);
 
             // Reverse entire array if the date is in descending order

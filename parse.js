@@ -254,3 +254,177 @@ function getTotalDataCount(base64StringArrInput) {
     let base64StringArr = newString.split('\",\"');
     return base64StringArr.length;
 }
+
+// Below is for Error Detect
+class ComplianceDataAnalyzeResult {
+    constructor() {
+        this.errorCountDictionary = {};
+    }
+
+    accumulateError(error) {
+        if (error) {
+            this.errorCountDictionary[error] = (this.errorCountDictionary[error] || 0) + 1;
+        }
+    }
+
+    setErrorCount(error, count) {
+        this.errorCountDictionary[error] = count;
+    }
+
+    getErrorCount(error) {
+        return this.errorCountDictionary[error] || 0;
+    }
+
+    getResult() {
+        return Object.values(this.errorCountDictionary).every((count) => count === 0);
+    }
+}
+
+class ErrorDetectParser {
+    constructor() {
+        this.nonDuplicateRecordDataSet = new Set();
+        this.startTimeDateSet = new Set();
+    }
+
+    static get shared() {
+        if (!this.instance) {
+            this.instance = new ErrorDetectParser();
+        }
+        return this.instance;
+    }
+
+    parseBase64StringArr(base64StringArr) {
+        const analyzeResult = new ComplianceDataAnalyzeResult();
+        let hourCount = base64StringArr.length;
+        let prevEndTimestamp = null;
+
+        for (const item of base64StringArr) {
+            const inserted = this.nonDuplicateRecordDataSet.has(item);
+
+            if (inserted) {
+                analyzeResult.accumulateError("duplicateRecord");
+            } else {
+                if (this.checkIfRecrodAllOxFFError(item)) {
+                    analyzeResult.accumulateError("allBytesFF");
+                } else {
+                    const resultBytes = base64ToArrayBuffer(item);
+                    const record = makeType1ComplianceRecord(resultBytes);
+
+                    if (record) {
+                        const initialDate1 = record.start;
+                        const initialDate2 = record.end;
+                        const timestampOfDat1 = initialDate1 ? initialDate1.getTime() / 1000 : 0;
+                        const timestampOfDat2 = initialDate2 ? initialDate2.getTime() / 1000 : 0;
+
+                        const timeError = this.checkIfAnyTimeValueIsNil(item, initialDate1, initialDate2);
+                        analyzeResult.accumulateError(timeError);
+
+                        if (!timeError) {
+                            const missingError = this.checkMissingHourlyRecordInTreatment(
+                                timestampOfDat1,
+                                prevEndTimestamp
+                            );
+                            analyzeResult.accumulateError(missingError);
+
+                            const timeChangedError = this.checkStartTimeBeChangedByError(
+                                initialDate1,
+                                this.startTimeDateSet
+                            );
+                            analyzeResult.accumulateError(timeChangedError);
+                        }
+
+                        if (initialDate1 && initialDate2) {
+                            prevEndTimestamp = Math.floor(timestampOfDat2);
+                        }
+                    } else {
+                        analyzeResult.accumulateError("dataCorrupted");
+                        console.log(`test88 recordCannotBuild, base64String: ${item}`);
+                    }
+                }
+            }
+        }
+
+        hourCount -= analyzeResult.getErrorCount("duplicateRecord");
+        return [hourCount, analyzeResult];
+    }
+
+    getBase64StringArrFromString(input) {
+        const newString = input.replace(/"/g, "");
+        const base64StringArr = newString.split(",");
+        base64StringArr.reverse();
+        return base64StringArr;
+    }
+
+    checkIfRecrodAllOxFFError(base64String) {
+        return base64String === "/////////////////////w==";
+    }
+
+
+   // Function to check if start time has been changed by an error
+   checkStartTimeBeChangedByError(initialDate1, startTimeDateSet) {
+        if (initialDate1) {
+            const date = new Date(initialDate1);
+            var seconds = date.getSeconds();
+            var minutes = date.getMinutes();
+            var hour = date.getHours();
+
+            var year = date.getFullYear();
+            var month = date.getMonth();
+            var day = date.getDate();
+
+            const yearMonthDayString = year + '/' + 
+                                       month + '/' + 
+                                       day;
+        
+            if (startTimeDateSet.has(yearMonthDayString)) {
+                if (minutes !== 0 || seconds !== 0) {
+                    return "startTimeChanged"; // Assuming RecordError is represented as a string in JS
+                }
+            }
+            startTimeDateSet.add(yearMonthDayString);
+        }
+        return null;
+    }
+
+   // Function to check for missing hourly records in treatment
+    checkMissingHourlyRecordInTreatment(timestampOfDat1, prevEndTimestamp) {
+        if (prevEndTimestamp !== null) {
+            if ((timestampOfDat1 - prevEndTimestamp) >= 5400 && 
+                (timestampOfDat1 - prevEndTimestamp) < 14400) {
+                return "missingData"; // Assuming RecordError is represented as a string in JS
+            }
+        }
+        return null;
+    }
+
+
+    checkIfTwoDatesInTheSameDay(date1, date2) {
+        const dateComponents1 = date1.toISOString().split("T")[0];
+        const dateComponents2 = date2.toISOString().split("T")[0];
+        return dateComponents1 === dateComponents2;
+    }
+
+    checkIfAnyTimeValueIsNil(base64String, initialDate1, initialDate2) {
+        if (initialDate1 === null && initialDate2 === null) {
+            return "bothTimesNil"; // Assuming RecordError is represented as a string in JS
+        } else if (initialDate1 === null) {
+            return "startTimeNil"; // Assuming RecordError is represented as a string in JS
+        } else if (initialDate2 === null) {
+            return "endTimeNil"; // Assuming RecordError is represented as a string in JS
+        }
+        return null;
+    }
+
+    getDateFormatterWithLocaleEN_US_POSIX() {
+        const dateFormatter = new Intl.DateTimeFormat("en-US-u-ca-gregory");
+        dateFormatter.calendar = "gregory";
+        return dateFormatter;
+    }
+
+    getBase64StringArr(input) {
+        let newString = input.replace(/"/g, "").replace(/'/g, "");
+        const base64StringArr = newString.split(",");
+        base64StringArr.reverse();
+        return base64StringArr;
+    }
+}
