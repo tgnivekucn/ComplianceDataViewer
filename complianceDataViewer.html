@@ -17,12 +17,19 @@
             position: relative;
             width: 60%;
         }
+        #item-wrapper {
+            width: 60%;
+            margin-left: 20%;
+            margin-right: 20%;
+        }
     </style>
 </head>
 
 <body>
     <br><br><br>
-    <p><label for="Binary Data in Base64 String"><b>Please enter base64String array:</b> </label></p>
+    <div id="item-wrapper">
+    <p><label for="Binary Data in Base64 String" style="font-size: 20px;"><b>Please enter base64String array:</b> </label></p>
+    </div>
     <br>
     <p> <div align="center"> <input type="text" id="myInput" style="width:1000px"> </div></p>
     <br>
@@ -31,15 +38,39 @@
     </p>
     <br><br><br>
     <div align="center">
-        <p>Total Data Count(p.s. 整點到下一個整點算一筆) is: <b><span id="totalDataCount"></span></b></p>
+        <p style="font-size: 20px;">Total Data Count(p.s. 整點到下一個整點算一筆) is: <b><span id="totalDataCount"></span></b></p>
     </div>
+    <div id="item-wrapper">
+        <label for="duplicateRecord" style="height: 30px;font-size: 20px;"><b>重複資料筆數:</b></label>
+        <span id="duplicateRecordCount"  style="color:red;font-size: 20px;"></span></form><br>
 
+        <label for="dataCorrupted" style="height: 30px;font-size: 20px;"><b>資料損壞個數:</b></label>
+        <span id="dataCorruptedCount"  style="color:red;font-size: 20px;"></span></form><br>
+        
+        <label for="startTimeNil" style="height: 30px;font-size: 20px;"><b>起始時間為空個數:</b></label>
+        <span id="startTimeNilCount"  style="color:red;font-size: 20px;"></span></form><br>
+              
+        <label for="endTimeNil" style="height: 30px;font-size: 20px;"><b>結束時間為空個數:</b></label>
+        <span id="endTimeNilCount"  style="color:red;font-size: 20px;"></span></form><br>
+             
+        <label for="bothTimesNil" style="height: 30px;font-size: 20px;"><b>起始與結束時間皆為空個數:</b></label>
+        <span id="bothTimesNilCount"  style="color:red;font-size: 20px;"></span></form><br> 
+
+        <label for="missingData" style="height: 30px;font-size: 20px;"><b>紀錄中間有某幾小時不見的個數:</b></label>
+        <span id="missingDataCount"  style="color:red;font-size: 20px;"></span></form><br> 
+
+        <label for="startTimeChanged" style="height: 30px;font-size: 20px;"><b>起始時間被修改的個數:</b></label>
+        <span id="startTimeChangedCount"  style="color:red;font-size: 20px;"></span></form><br> 
+
+        <label for="allBytesFF" style="height: 30px;font-size: 20px;"><b>紀錄所有bytes都是0xFF的個數:</b></label>
+        <span id="allBytesFFCount"  style="color:red;font-size: 20px;"></span></form><br> 
+    </div>
     <div id="chart-wrapper">
-           <p><label for="CannotScrollChart"><b>不能左右移動檢視的圖表:</b> </label></p>
+           <p><label for="CannotScrollChart" style="font-size: 20px;"><b>不能左右移動檢視的圖表:</b> </label></p>
         <canvas id="myChartOriginal"></canvas>
         <div align="center"> <button type="Reset Zoom" onclick="trackChange()">Reset Zoom</button> </div>
 
-        <p><label for="SupportScrollChart"><b>可以左右移動檢視的圖表:</b> </label></p>
+        <p><label for="SupportScrollChart" style="font-size: 20px;"><b>可以左右移動檢視的圖表:</b> </label></p>
         <div style="width: 100%; overflow-x: auto; overflow-y: hidden">
             <div style="width: 3000px;height: 600px">
                 <canvas id="myChart" width="0" height: 500></canvas>
@@ -81,6 +112,42 @@
             console.log("Analyze Result(startTimeChanged) count:", analyzeResult.getErrorCount('startTimeChanged'));
             console.log("Analyze Result(allBytesFF) count:", analyzeResult.getErrorCount('allBytesFF'));
 
+            document.getElementById('duplicateRecordCount').innerHTML = analyzeResult.getErrorCount('dataCorrupted');
+            document.getElementById('dataCorruptedCount').innerHTML = analyzeResult.getErrorCount('duplicateRecord');
+            document.getElementById('startTimeNilCount').innerHTML = analyzeResult.getErrorCount('startTimeNil');
+            document.getElementById('endTimeNilCount').innerHTML = analyzeResult.getErrorCount('endTimeNil');
+            document.getElementById('bothTimesNilCount').innerHTML = analyzeResult.getErrorCount('bothTimesNil');
+            document.getElementById('missingDataCount').innerHTML = analyzeResult.getErrorCount('missingData');
+            document.getElementById('startTimeChangedCount').innerHTML = analyzeResult.getErrorCount('startTimeChanged');
+            document.getElementById('allBytesFFCount').innerHTML = analyzeResult.getErrorCount('allBytesFF');
+
+            if (analyzeResult.getErrorCount('dataCorrupted') == 0) {
+                document.getElementById("duplicateRecordCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('duplicateRecord') == 0) {
+                document.getElementById("dataCorruptedCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('startTimeNil') == 0) {
+                document.getElementById("startTimeNilCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('endTimeNil') == 0) {
+                document.getElementById("endTimeNilCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('bothTimesNil') == 0) {
+                document.getElementById("bothTimesNilCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('missingData') == 0) {
+                document.getElementById("missingDataCount").style.color = "blue";
+            }
+
+            if (analyzeResult.getErrorCount('allBytesFF') == 0) {
+                document.getElementById("allBytesFFCount").style.color = "blue";
+            }
 
             console.log("(3)");
 
@@ -167,11 +234,21 @@
                 options: {
                     responsive: true,
                     scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 20,
+                                }
+                            }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
                                 min: 0, // minimum value
-                                max: 10000 // maximum value
+                                max: 10000, // maximum value
+                                font: {
+                                    size: 20,
+                                }
                             }
                         }
                     },
@@ -207,11 +284,21 @@
                 options: {
                     responsive: true,
                     scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 20,
+                                }
+                            }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
                                 min: 0, // minimum value
-                                max: 10000 // maximum value
+                                max: 10000, // maximum value
+                                font: {
+                                    size: 20,
+                                }
                             }
                         }
                     },
